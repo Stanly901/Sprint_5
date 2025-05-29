@@ -1,45 +1,47 @@
-from selenium.webdriver.common.by import By
+# Вход через кнопку «Личный кабинет»
+
+import pytest
 from selenium.webdriver.support import expected_conditions as EC
+from locators import TestLocators
 
+@pytest.mark.usefixtures("driver", "wait", "base_url", "test_user")
+class TestLoginViaPersonalAccount:
 
-def test_login_via_personal_account(driver, wait, base_url, user_credentials):
+    def test_login_via_personal_account(self, driver, wait, base_url, test_user):
+        # 1. Открываем главную страницу
+        driver.get(base_url)
 
-    # 1. Открываем главную страницу
-    driver.get(base_url)
-
-    # 2. Кликаем по кнопке "Личный Кабинет"
-    account_button = wait.until(
-        EC.element_to_be_clickable(
-            (By.XPATH, "//p[contains(@class, 'AppHeader_header__linkText__3q_va') and text()='Личный Кабинет']")
+        # 2. Кликаем по кнопке "Личный Кабинет"
+        account_button = wait.until(
+            EC.element_to_be_clickable(TestLocators.ACCOUNT_BUTTON)
         )
-    )
-    account_button.click()
+        account_button.click()
 
-    # 3. Заполняем форму авторизации
-    email_field = wait.until(
-        EC.visibility_of_element_located(
-            (By.XPATH, "//label[text()='Email']/following-sibling::input")
+        # 3. Заполняем форму авторизации на странице авторизации
+        email_field = wait.until(
+            EC.visibility_of_element_located(TestLocators.EMAIL_FIELD)
         )
-    )
-    email_field.send_keys(user_credentials["email"])
+        email_field.send_keys(test_user["email"])
 
-    password_field = driver.find_element(By.XPATH, "//input[@type='password']")
-    password_field.send_keys(user_credentials["password"])
+        password_field = driver.find_element(*TestLocators.PASSWORD_FIELD)
+        password_field.send_keys(test_user["password"])
 
-    # 4. Кликаем кнопку "Войти"
-    login_button = wait.until(
-        EC.element_to_be_clickable(
-            (By.XPATH, "//button[contains(text(), 'Войти')]")
+        # 4. Кликаем кнопку "Войти" на странице авторизации
+        login_button = wait.until(
+            EC.element_to_be_clickable(TestLocators.LOGIN_BUTTON)
         )
-    )
-    login_button.click()
+        login_button.click()
 
-    # 5. Проверяем результат в зависимости от типа тестовых данных
-    if user_credentials["is_valid"]:
+        # 5. Клик по кнопке "Личный кабинет" на главной странице
+        account_button = wait.until(
+            EC.element_to_be_clickable(TestLocators.ACCOUNT_BUTTON)
+        )
+        account_button.click()
+
+        # 6. Ожидаем переход на страницу профиля
         wait.until(EC.url_contains("/account/profile"))
-    else:
-        error_message = wait.until(
-            EC.visibility_of_element_located(
-                (By.XPATH, "//p[contains(@class, 'input__error')]")
-            )
+
+        # 7. Проверка: нахождение на странице профиля
+        assert "/account/profile" in driver.current_url, (
+            f"Ожидался переход на страницу профиля, но текущий URL: {driver.current_url}"
         )

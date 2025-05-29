@@ -1,26 +1,34 @@
-from selenium.webdriver.common.by import By
+# Переход между разделами: Булки, Соусы, Начинки
+import time
+import pytest
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import ElementClickInterceptedException
+from locators import TestLocators
 
+@pytest.mark.usefixtures("driver", "wait", "base_url", "sections")
+class TestSectionNavigation:
 
-def test_section_navigation(driver, wait, base_url, sections):
+    def test_section_navigation(self, driver, wait, base_url, sections):
+        # 1. Открываем главную страницу
+        driver.get(base_url)
 
-    # 1. Открываем главную страницу
-    driver.get(base_url)
-
-    # 2. Проверяем навигацию по всем разделам
-    for section in sections:
-        # Находим и кликаем на раздел
-        section_element = wait.until(
-            EC.element_to_be_clickable(
-                (By.XPATH, f"//div[contains(@class, 'tab_tab__')]//span[text()='{section}']/..")
+        for section in sections:
+            # 2. Ожидаем кликабельность раздела на главной странице
+            section_element = wait.until(
+                EC.element_to_be_clickable(TestLocators.tab_by_name(section))
             )
-        )
-        section_element.click()
 
-        # Проверяем, что раздел активен
-        active_section = wait.until(
-            EC.presence_of_element_located(
-                (By.XPATH, f"//div[contains(@class, 'tab_tab_type_current__')]//span[text()='{section}']")
+            driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", section_element)
+            wait.until(EC.visibility_of(section_element))
+
+            try:
+                section_element.click()
+            except ElementClickInterceptedException:
+                time.sleep(1)
+                driver.execute_script("arguments[0].click();", section_element)
+
+            # 3. Проверка: раздел активен
+            active_section = wait.until(
+                EC.presence_of_element_located(TestLocators.active_tab_by_name(section))
             )
-        )
-        assert active_section is not None, f"Раздел '{section}' не стал активным"
+            assert active_section is not None, f"Раздел '{section}' не стал активным"

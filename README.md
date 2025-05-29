@@ -27,4 +27,20 @@
 - «Соусы»,
 - «Начинки».
 
-#26.05.2025
+#28.05.2025 Update
+Добавлены ассерты к тестам:
+- test_forgot_password_page_login_account_button
+- test_login_page_transition_constructor
+- test_login_page_transition_logo
+- test_main_page_click_personal_account
+- test_main_page_login_account_button
+- test_main_page_login_personal_account_button
+- test_main_page_transition_between_sections
+- test_profile_page_exit
+- test_registration_page_login_button
+- test_registration_page_password_less_than_six_characters
+- test_registration_page_successful_registration
+
+Тестовые функции объединены в тестовые классы и используются в тестах
+Добавлено описание фикстур
+Добавлены локаторы

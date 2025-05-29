@@ -1,40 +1,60 @@
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
+import pytest
+import random
+import string
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import WebDriverWait
 
 
-def test_successful_registration(driver, wait, base_url, register_page_url, valid_user_data):
-    # 1. Открываем страницу регистрации
-    driver.get(f"{base_url}{register_page_url}")
+@pytest.fixture(scope="class") # Настройка драйвера перед тестом
+def driver():
+    service = Service(executable_path=ChromeDriverManager().install())
+    driver = webdriver.Chrome(service=service)
+    driver.maximize_window()
+    yield driver
+    driver.quit()
 
-    # 2. Заполняем поле "Имя"
-    name_field = wait.until(
-        EC.visibility_of_element_located(
-            (By.XPATH, "//label[text()='Имя']/following-sibling::input")
-        )
-    )
-    name_field.send_keys(valid_user_data["name"])
+@pytest.fixture(scope="class") # ожидание в 10 секунд после выполнения действия
+def wait(driver):
+    return WebDriverWait(driver, 10)
 
-    # 3. Заполняем поле "Email"
-    email_field = driver.find_element(
-        By.XPATH, "//label[text()='Email']/following-sibling::input"
-    )
-    email_field.send_keys(valid_user_data["email"])
+@pytest.fixture(scope="class") # данные учетки
+def test_user():
+    return {
+        "email": "bondarenko232323@ya.ru",
+        "password": "123456"
+    }
 
-    # 4. Заполняем поле "Пароль"
-    password_field = driver.find_element(
-        By.XPATH, "//input[@type='password']"
-    )
-    password_field.send_keys(valid_user_data["password"])
+@pytest.fixture(scope="class") # возвращение на главную страницу
+def base_url():
+    return "https://stellarburgers.nomoreparties.site"
 
-    # 5. Кликаем "Зарегистрироваться"
-    register_button = wait.until(
-        EC.element_to_be_clickable(
-            (By.XPATH, "//button[contains(text(), 'Зарегистрироваться')]")
-        )
-    )
-    register_button.click()
+@pytest.fixture(scope="class") # данные учетки не валидные
+def invalid_user_data():
+    return {
+        "name": "Иван",
+        "email": "bondarenko232323@ya.ru",
+        "password": "12345",
+        "expected_error": "Некорректный пароль"
+    }
 
-    # 6. Проверяем успешную регистрацию (переход на страницу входа)
-    wait.until(
-        EC.url_contains("/login")
-    )
+@pytest.fixture(scope="class") # разделы перехода
+def sections():
+    return ["Булки", "Соусы", "Начинки"]
+
+@pytest.fixture(scope="class") # URL страницы регистрации
+def register_page_url():
+    return "/register"
+
+@pytest.fixture(scope="class") # данными для регистрации
+def valid_user_data():
+    return {
+        "name": "Иван",
+        "password": "1234567"
+    }
+
+@pytest.fixture(scope="function") # генерация случайного email
+def random_email():
+    username = ''.join(random.choices(string.ascii_lowercase + string.digits, k=10))
+    return f"{username}@example.com"

@@ -1,21 +1,24 @@
-from selenium.webdriver.common.by import By
+import pytest
 from selenium.webdriver.support import expected_conditions as EC
+from locators import TestLocators
 
+@pytest.mark.usefixtures("driver", "wait", "base_url")
+class TestNavigationFromLogo:
 
-def test_logo_navigation(driver, wait, base_url):
+    def test_logo_navigation_from_login_page(self, driver, wait, base_url):
+        # 1. Переходим на страницу авторизации
+        driver.get(f"{base_url}/login")
 
-    # 1. Переходим на страницу авторизации
-    driver.get(f"{base_url}/login")
-
-    # 2. Кликаем по логотипу
-    logo = wait.until(
-        EC.element_to_be_clickable(
-            (By.XPATH, "//div[contains(@class, 'AppHeader_header__logo__2D0X2')]")
+        # 2. Кликаем по логотипу на главной странице
+        logo = wait.until(
+            EC.element_to_be_clickable(TestLocators.LOGO)
         )
-    )
-    logo.click()
+        logo.click()
 
-    # 3. Проверяем переход на главную страницу
-    wait.until(
-        EC.url_to_be(f"{base_url}/")
-    )
+        # 3. Ожидание загрузки элемента на главной странице
+        burger_header = wait.until(
+            EC.visibility_of_element_located(TestLocators.BURGER_HEADER)
+        )
+
+        # 4. Проверка: заголовок конструктора отображается
+        assert burger_header.is_displayed(), "Заголовок конструктора не отображается — переход не удался"
